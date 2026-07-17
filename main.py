@@ -38,6 +38,10 @@ def main() -> None:
         bearer_token=bearer_token,
     )
 
+    current_user = client.get_current_user()
+
+    user_name = current_user.get("full_name") or "?"
+
     route_data = client.get_current_gym_routes(gym_id)
 
     routes = [
@@ -200,6 +204,7 @@ def main() -> None:
         top_rope_routes=top_rope_todo,
         lead_routes=lead_todo,
         route_ascents=route_ascents,
+        user_name=user_name,
         generated_at=generated_at,
     )
 

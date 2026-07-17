@@ -1,0 +1,7 @@
+[top_rope]
+min_grade = "6a"
+max_grade = "7b"
+
+[lead]
+min_grade = "5c"
+max_grade = "7a"

@@ -20,6 +20,14 @@ class OblykClient:
             }
         )
 
+    def get_current_user(self) -> dict:
+        response = self.session.get(
+            f"{self.BASE_URL}/current_users.json"
+        )
+        response.raise_for_status()
+
+        return response.json()
+
     def get_current_gym_routes(
         self,
         gym_id: int,
