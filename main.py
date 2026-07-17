@@ -1,8 +1,7 @@
 import os
+from config import load_config
 from datetime import date
-
 from dotenv import load_dotenv
-
 from exporters.ods import export_todo_ods
 from oblyk.client import OblykClient
 from pathlib import Path
@@ -12,8 +11,12 @@ from todo.builder import (
     needs_lead,
     needs_top_rope,
 )
+from todo.grade import GradeScale, filter_routes
 from todo.models import Ascent, Route
 
+config = load_config()
+
+print(config)
 
 def get_required_env(name: str) -> str:
     value = os.getenv(name)
@@ -50,6 +53,18 @@ def main() -> None:
         if data.get("climbing_type") == "sport_climbing"
         and not data.get("dismounted", False)
     ]
+
+    grade_scale = GradeScale(routes)
+
+    top_rope_min, top_rope_max = grade_scale.validate_range(
+        config.top_rope.grade_min,
+        config.top_rope.grade_max,
+    )
+
+    lead_min, lead_max = grade_scale.validate_range(
+        config.lead.grade_min,
+        config.lead.grade_max,
+    )
 
     if not routes:
         raise RuntimeError("No current sport climbing routes found")
@@ -121,16 +136,34 @@ def main() -> None:
         ascents=ascents,
     )
 
-    top_rope_todo: list[Route] = []
-    lead_todo: list[Route] = []
+    top_rope_routes = filter_routes(
+        routes,
+        top_rope_min,
+        top_rope_max,
+    )
 
-    for route in routes:
+    lead_routes = filter_routes(
+        routes,
+        lead_min,
+        lead_max,
+    )
+
+    top_rope_todo: list[Route] = []
+
+    for route in top_rope_routes:
         history = build_route_history(
             route_ascents.get(route.id, [])
         )
 
         if needs_top_rope(history):
             top_rope_todo.append(route)
+
+    lead_todo: list[Route] = []
+
+    for route in lead_routes:
+        history = build_route_history(
+            route_ascents.get(route.id, [])
+        )
 
         if needs_lead(route, history):
             lead_todo.append(route)
