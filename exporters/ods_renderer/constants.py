@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-WHITE_MIX = 0.80
+WHITE_MIX = 0.65
 
 GRADE_COLORS = {
     "3a": "#ffdd54",
@@ -30,12 +30,6 @@ HOLD_COLOR_ORDER = {
     "#ff0000": 4,   # rouge
     "#f2f2f2": 5,   # blanc
     "#1a1a1a": 6,   # noir
-}
-
-SPACE_ORDER = {
-    "Grande Salle": 0,
-    "Voie Etage": 1,
-    "Mur Extérieur": 2,
 }
 
 HEADERS = (

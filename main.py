@@ -3,7 +3,7 @@ from config import load_config
 from datetime import date
 from dotenv import load_dotenv
 from exporters.ods import export_todo_ods
-from oblyk.client import OblykClient
+from oblyk.client import build_space_order, OblykClient
 from pathlib import Path
 from todo.builder import (
     build_route_ascents,
@@ -46,6 +46,9 @@ def main() -> None:
     user_name = current_user.get("full_name") or "?"
 
     route_data = client.get_current_gym_routes(gym_id)
+
+    spaces = client.get_gym_spaces(gym_id)
+    space_order = build_space_order(spaces)
 
     routes = [
         Route.from_api(data)
@@ -234,11 +237,17 @@ def main() -> None:
 
     export_todo_ods(
         output_path=output_path,
+        all_routes=routes,
         top_rope_routes=top_rope_todo,
         lead_routes=lead_todo,
         route_ascents=route_ascents,
         user_name=user_name,
         generated_at=generated_at,
+        top_rope_grade_min=config.top_rope.grade_min,
+        top_rope_grade_max=config.top_rope.grade_max,
+        lead_grade_min=config.lead.grade_min,
+        lead_grade_max=config.lead.grade_max,
+        space_order=space_order,
     )
 
     print()

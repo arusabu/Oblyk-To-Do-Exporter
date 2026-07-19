@@ -19,18 +19,7 @@ def format_sector(sector: str) -> str:
 
 
 def format_space(space: str) -> str:
-    normalized = space.strip()
-
-    names = {
-        "Grande Salle": "GRANDE SALLE",
-        "Voie Etage": "VOIE ÉTAGE",
-        "Mur Extérieur": "MUR EXTÉRIEUR",
-    }
-
-    return names.get(
-        normalized,
-        normalized.upper(),
-    )
+    return space.strip().upper()
 
 
 def is_rotation_warning(
@@ -41,6 +30,9 @@ def is_rotation_warning(
 
     if route.space == "Grande Salle":
         return age_days >= 90
+    
+    if route.space == "Voie Etage":
+        return age_days >= 150
 
     if route.space == "Mur Extérieur":
         return age_days >= 150

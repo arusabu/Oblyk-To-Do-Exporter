@@ -28,12 +28,12 @@ from .colors import (
 )
 
 from .constants import (
-    SPACE_ORDER,
     HEADERS,
     COLUMN_WIDTHS,
     FIRST_PAGE_ROWS,
     CONTINUATION_PAGE_ROWS,
 )
+from .dismantling import get_dismantling_indicator
 
 from .helpers import (
     format_sector,
@@ -64,7 +64,6 @@ def add_text(
     )
     cell.addElement(paragraph)
 
-
 def add_hold_colors(
     cell: Any,
     hold_colors: tuple[str, ...],
@@ -86,6 +85,27 @@ def add_hold_colors(
                 text="■",
             )
         )
+
+    cell.addElement(paragraph)
+
+
+def add_warning_dot(
+    cell: Any,
+    level: str,
+    warning_styles: dict[str, Any],
+) -> None:
+    if level == "":
+        cell.addElement(P())
+        return
+
+    paragraph = P()
+
+    paragraph.addElement(
+        Span(
+            stylename=warning_styles[level],
+            text="●",
+        )
+    )
 
     cell.addElement(paragraph)
 
@@ -120,6 +140,11 @@ def add_title_rows(
     user_name: str,
     generated_at: date,
     route_count: int,
+    mode: str,
+    top_rope_grade_min: str,
+    top_rope_grade_max: str,
+    lead_grade_min: str,
+    lead_grade_max: str,
     page_break: bool = False,
 ) -> None:
     title_row = TableRow(
@@ -133,9 +158,15 @@ def add_title_rows(
         stylename=styles["title_cell"],
         numbercolumnsspanned=str(len(HEADERS)),
     )
+    if mode == "top_rope":
+        grade_min = top_rope_grade_min
+        grade_max = top_rope_grade_max
+    else:
+        grade_min = lead_grade_min
+        grade_max = lead_grade_max
     add_text(
         title_cell,
-        title,
+        f"{title} · {grade_min} → {grade_max} ({route_count} voies)",
         styles["title"],
     )
     title_row.addElement(title_cell)
@@ -148,7 +179,7 @@ def add_title_rows(
     add_text(
         subtitle_cell,
         (
-            f"{user_name} · générée le {generated_at.strftime('%d/%m/%Y')} · {route_count} voies"
+            f"{user_name} · {generated_at.strftime('%d/%m/%Y')}"
         ),
         styles["subtitle"],
     )
@@ -206,6 +237,7 @@ def add_route_row(
     styles: dict[str, Any],
     route_cell_styles: dict[str, dict[str, Any]],
     hold_color_styles: dict[str, Any],
+    all_routes_in_space: list[Route],
     route: Route,
     status: str,
     generated_at: date,
@@ -241,10 +273,14 @@ def add_route_row(
         route_cell_styles["grade"]["fallback"],
     )
 
-    warning = is_rotation_warning(
-        route,
-        generated_at,
+    warning_level = get_dismantling_indicator(
+        route=route,
+        all_routes_in_space=all_routes_in_space,
+        today=generated_at,
     )
+
+    is_red = warning_level == "red"
+    is_yellow = warning_level == "yellow"
 
     checkbox_cell = TableCell(
         stylename=centered_cell_style,
@@ -296,12 +332,33 @@ def add_route_row(
     row.addElement(hold_cell)
 
     opened_at = route.opened_at.strftime("%d/%m/%Y")
-    warning_symbol = "⚠" if warning else ""
+
+    yellow_cell_style = route_cell_styles["yellow"].get(
+        normalized_grade,
+        route_cell_styles["yellow"]["fallback"],
+    )
+
+    centered_yellow_cell_style = route_cell_styles[
+        "centered_yellow"
+    ].get(
+        normalized_grade,
+        route_cell_styles["centered_yellow"]["fallback"],
+    )
+
+    if is_red:
+        name_style = warning_cell_style
+        symbol_style = centered_warning_cell_style
+    elif is_yellow:
+        name_style = yellow_cell_style
+        symbol_style = centered_yellow_cell_style
+    else:
+        name_style = normal_cell_style
+        symbol_style = centered_cell_style
 
     remaining_values = (
         (
             route.name,
-            warning_cell_style if warning else normal_cell_style,
+            name_style,
         ),
         (
             ", ".join(route.openers) or "?",
@@ -312,8 +369,8 @@ def add_route_row(
             centered_cell_style,
         ),
         (
-            warning_symbol,
-            centered_warning_cell_style if warning else centered_cell_style,
+            "●" if warning_level else "",
+            symbol_style,
         ),
         (
             status,
@@ -335,6 +392,7 @@ def add_route_row(
         row.addElement(cell)
 
     table.addElement(row)
+   
 
 def create_page_layout(
     document: Any,
@@ -378,11 +436,17 @@ def add_todo_sheet(
     master_page: Any,
     sheet_name: str,
     title: str,
+    all_routes: list[Route],
     routes: list[Route],
     route_ascents: dict[int, list[Ascent]],
     user_name: str,
     generated_at: date,
     mode: str,
+    top_rope_grade_min: str,
+    top_rope_grade_max: str,
+    lead_grade_min: str,
+    lead_grade_max: str,
+    space_order: dict[str, int],
 ) -> None:
     table_style = Style(
         name=f"{sheet_name}Table",
@@ -404,29 +468,32 @@ def add_todo_sheet(
         table,
     )
 
-    sorted_routes = sorted(
-        routes,
-        key=route_sort_key,
-    )
-
     routes_by_space: dict[str, list[Route]] = {}
 
-    for route in sorted_routes:
+    for route in routes:
         routes_by_space.setdefault(
+            route.space,
+            [],
+        ).append(route)
+    
+    all_routes_by_space: dict[str, list[Route]] = {}
+
+    for route in all_routes:
+        all_routes_by_space.setdefault(
             route.space,
             [],
         ).append(route)
 
     first_page = True
 
-    for space in sorted(
-        routes_by_space,
-        key=lambda value: SPACE_ORDER.get(
-            value,
-            999,
-        ),
-    ):
-        space_routes = routes_by_space[space]
+    for space in space_order:
+        space_routes = sorted(
+            routes_by_space.get(space, []),
+            key=route_sort_key,
+        )
+
+        if not space_routes:
+            continue
 
         route_pages = paginate_routes(
             routes=space_routes,
@@ -435,14 +502,19 @@ def add_todo_sheet(
         )
 
         add_title_rows(
-                table=table,
-                styles=styles,
-                title=title,
-                user_name=user_name,
-                generated_at=generated_at,
-                route_count=len(space_routes),
-                page_break=not first_page
-            )
+            table=table,
+            styles=styles,
+            title=title,
+            user_name=user_name,
+            generated_at=generated_at,
+            route_count=len(space_routes),
+            mode=mode,
+            top_rope_grade_min=top_rope_grade_min,
+            top_rope_grade_max=top_rope_grade_max,
+            lead_grade_min=lead_grade_min,
+            lead_grade_max=lead_grade_max,
+            page_break=not first_page
+        )
 
         for route_page in route_pages:
 
@@ -482,6 +554,7 @@ def add_todo_sheet(
                     styles=styles,
                     route_cell_styles=route_cell_styles,
                     hold_color_styles=hold_color_styles,
+                    all_routes_in_space=all_routes_by_space[route.space],
                     route=route,
                     status=status,
                     generated_at=generated_at,
@@ -493,11 +566,17 @@ def add_todo_sheet(
 
 def export_todo_ods(
     output_path: Path,
+    all_routes: list[Route],
     top_rope_routes: list[Route],
     lead_routes: list[Route],
     route_ascents: dict[int, list[Ascent]],
     user_name: str,
     generated_at: date,
+    top_rope_grade_min: str,
+    top_rope_grade_max: str,
+    lead_grade_min: str,
+    lead_grade_max: str,
+    space_order: dict[str, int],
 ) -> None:
     document = OpenDocumentSpreadsheet()
 
@@ -522,12 +601,18 @@ def export_todo_ods(
         hold_color_styles=hold_color_styles,
         master_page=master_page,
         sheet_name="Moulinette",
-        title="TO-DO MOULINETTE",
+        title="MOULINETTE",
+        all_routes=all_routes,
         routes=top_rope_routes,
         route_ascents=route_ascents,
         user_name=user_name,
         generated_at=generated_at,
         mode="top_rope",
+        top_rope_grade_min=top_rope_grade_min,
+        top_rope_grade_max=top_rope_grade_max,
+        lead_grade_min=lead_grade_min,
+        lead_grade_max=lead_grade_max,
+        space_order=space_order,
     )
 
     add_todo_sheet(
@@ -537,12 +622,18 @@ def export_todo_ods(
         hold_color_styles=hold_color_styles,
         master_page=master_page,
         sheet_name="Tête",
-        title="TO-DO TÊTE",
+        title="TÊTE",
+        all_routes=all_routes,
         routes=lead_routes,
         route_ascents=route_ascents,
         user_name=user_name,
         generated_at=generated_at,
         mode="lead",
+        top_rope_grade_min=top_rope_grade_min,
+        top_rope_grade_max=top_rope_grade_max,
+        lead_grade_min=lead_grade_min,
+        lead_grade_max=lead_grade_max,
+        space_order=space_order,
     )
 
     output_path.parent.mkdir(

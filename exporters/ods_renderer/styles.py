@@ -294,8 +294,10 @@ def create_route_cell_styles(
     styles: dict[str, dict[str, Any]] = {
         "normal": {},
         "warning": {},
+        "yellow": {},
         "centered": {},
         "centered_warning": {},
+        "centered_yellow": {},
         "grade": {},
     }
 
@@ -337,6 +339,28 @@ def create_route_cell_styles(
         )
         document.automaticstyles.addElement(warning_style)
         styles["warning"][grade] = warning_style
+
+        yellow_style = Style(
+            name=f"RouteCellYellow_{grade}",
+            family="table-cell",
+        )
+        yellow_style.addElement(
+            TableCellProperties(
+                backgroundcolor=background_color,
+                padding="0.10cm",
+                border="0.02cm solid #cccccc",
+                verticalalign="middle",
+            )
+        )
+        yellow_style.addElement(
+            TextProperties(
+                color="#FFA500",
+                fontweight="bold",
+            )
+        )
+        document.automaticstyles.addElement(yellow_style)
+        styles["yellow"][grade] = yellow_style
+
 
         centered_style = Style(
             name=f"CenteredRouteCell_{grade}",
@@ -384,6 +408,32 @@ def create_route_cell_styles(
         document.automaticstyles.addElement(centered_warning_style)
         styles["centered_warning"][grade] = centered_warning_style
 
+        centered_yellow_style = Style(
+            name=f"CenteredRouteCellYellow_{grade}",
+            family="table-cell",
+        )
+        centered_yellow_style.addElement(
+            TableCellProperties(
+                backgroundcolor=background_color,
+                padding="0.10cm",
+                border="0.02cm solid #cccccc",
+                verticalalign="middle",
+            )
+        )
+        centered_yellow_style.addElement(
+            ParagraphProperties(
+                textalign="center",
+            )
+        )
+        centered_yellow_style.addElement(
+            TextProperties(
+                color="#FFA500",
+                fontweight="bold",
+            )
+        )
+        document.automaticstyles.addElement(centered_yellow_style)
+        styles["centered_yellow"][grade] = centered_yellow_style
+
         grade_style = Style(
             name=f"GradeRouteCell_{grade}",
             family="table-cell",
@@ -403,8 +453,10 @@ def create_route_cell_styles(
     for style_kind in (
         "normal",
         "warning",
+        "yellow",
         "centered",
         "centered_warning",
+        "centered_yellow",
         "grade",
     ):
         fallback_style = Style(
@@ -423,6 +475,7 @@ def create_route_cell_styles(
         if style_kind in (
             "centered",
             "centered_warning",
+            "centered_yellow",
         ):
             fallback_style.addElement(
                 ParagraphProperties(
@@ -437,10 +490,23 @@ def create_route_cell_styles(
                 )
             )
         
-        if "warning" in style_kind:
+        if style_kind in (
+            "warning",
+            "centered_warning",
+        ):
             fallback_style.addElement(
                 TextProperties(
                     color="#b00020",
+                    fontweight="bold",
+                )
+            )
+        elif style_kind in (
+            "yellow",
+            "centered_yellow",
+        ):
+            fallback_style.addElement(
+                TextProperties(
+                    color="#FFA500",
                     fontweight="bold",
                 )
             )

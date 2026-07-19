@@ -2,7 +2,6 @@ from typing import Any
 
 import requests
 
-
 class OblykClient:
     BASE_URL = "https://api.oblyk.org/api/v1"
 
@@ -27,7 +26,23 @@ class OblykClient:
         response.raise_for_status()
 
         return response.json()
+    
+    def get_gym_spaces(
+        self,
+        gym_id: int,
+    ) -> list[dict[str, Any]]:
+        print(f"[INFO] Fetching gym {gym_id} spaces...")
 
+        response = self.session.get(
+            f"{self.BASE_URL}/gyms/{gym_id}/gym_spaces/groups.json",
+            timeout=30,
+        )
+        response.raise_for_status()
+
+        payload = response.json()
+
+        return payload["ungrouped_spaces"]
+    
     def get_current_gym_routes(
         self,
         gym_id: int,
@@ -107,3 +122,11 @@ class OblykClient:
         response.raise_for_status()
 
         return response.json()
+    
+def build_space_order(
+    spaces: list[dict[str, Any]],
+) -> dict[str, int]:
+    return {
+        space["name"].strip(): index
+        for index, space in enumerate(spaces)
+    }

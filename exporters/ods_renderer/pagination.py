@@ -1,9 +1,6 @@
 from todo.models import Route
-
-from .constants import SPACE_ORDER, HOLD_COLOR_ORDER
-
+from .constants import HOLD_COLOR_ORDER
 from .helpers import format_sector
-
 
 def hold_color_sort_key(route: Route) -> int:
     if not route.hold_colors:
@@ -14,10 +11,8 @@ def hold_color_sort_key(route: Route) -> int:
         999,
     )
 
-
-def route_sort_key(route: Route) -> tuple[int, int, str, int, str]:
+def route_sort_key(route: Route):
     return (
-        SPACE_ORDER.get(route.space, 999),
         route.grade_value,
         format_sector(route.display_sector),
         hold_color_sort_key(route),
