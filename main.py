@@ -32,21 +32,21 @@ def get_required_env(name: str) -> str:
 def main() -> None:
     load_dotenv()
 
-    api_access_token = get_required_env("OBLYK_API_ACCESS_TOKEN")
-    bearer_token = get_required_env("OBLYK_BEARER_TOKEN")
-    gym_id = int(get_required_env("OBLYK_GYM_ID"))
+    email = get_required_env("OBLYK_EMAIL")
+    password = get_required_env("OBLYK_PASSWORD")
 
-    client = OblykClient(
-        api_access_token=api_access_token,
-        bearer_token=bearer_token,
+    client = OblykClient()
+
+    client.login(
+        email=email,
+        password=password,
     )
 
+    gym_id = config.gym.id
+
     current_user = client.get_current_user()
-
     user_name = current_user.get("full_name") or "?"
-
     route_data = client.get_current_gym_routes(gym_id)
-
     spaces = client.get_gym_spaces(gym_id)
     space_order = build_space_order(spaces)
 

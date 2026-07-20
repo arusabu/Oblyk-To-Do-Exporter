@@ -2,8 +2,10 @@ from datetime import date
 
 from todo.models import Route
 
-RED_THRESHOLD = 0.85
-YELLOW_THRESHOLD = 0.70
+from .constants import (
+    DISMANTLING_WARNING_THRESHOLD,
+    DISMANTLING_CRITICAL_THRESHOLD,
+)
 
 def get_dismantling_indicator(
     route: Route,
@@ -30,16 +32,12 @@ def get_dismantling_indicator(
         today - route.opened_at
     ).days
 
-    RED = "red"
-    YELLOW = "yellow"
-    NONE = ""
-
     ratio = current_age / oldest_age
 
-    if ratio >= RED_THRESHOLD:
-        return RED
+    if ratio >= DISMANTLING_CRITICAL_THRESHOLD:
+        return "critical"
 
-    if ratio >= YELLOW_THRESHOLD:
-        return YELLOW
+    if ratio >= DISMANTLING_WARNING_THRESHOLD:
+        return "warning"
 
-    return NONE
+    return ""

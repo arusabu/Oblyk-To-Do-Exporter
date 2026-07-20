@@ -1,3 +1,6 @@
+[gym]
+id = 115
+
 [top_rope]
 grade_min = "5c"
 grade_max = "6c"

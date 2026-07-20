@@ -251,9 +251,9 @@ def add_route_row(
         route_cell_styles["normal"]["fallback"],
     )
 
-    warning_cell_style = route_cell_styles["warning"].get(
+    critical_cell_style = route_cell_styles["critical"].get(
         normalized_grade,
-        route_cell_styles["warning"]["fallback"],
+        route_cell_styles["critical"]["fallback"],
     )
 
     centered_cell_style = route_cell_styles["centered"].get(
@@ -261,11 +261,11 @@ def add_route_row(
         route_cell_styles["centered"]["fallback"],
     )
 
-    centered_warning_cell_style = route_cell_styles[
-        "centered_warning"
+    centered_critical_cell_style = route_cell_styles[
+        "centered_critical"
     ].get(
         normalized_grade,
-        route_cell_styles["centered_warning"]["fallback"],
+        route_cell_styles["centered_critical"]["fallback"],
     )
 
     grade_cell_style = route_cell_styles["grade"].get(
@@ -279,8 +279,8 @@ def add_route_row(
         today=generated_at,
     )
 
-    is_red = warning_level == "red"
-    is_yellow = warning_level == "yellow"
+    is_critical = warning_level == "critical"
+    is_warning = warning_level == "warning"
 
     checkbox_cell = TableCell(
         stylename=centered_cell_style,
@@ -333,24 +333,24 @@ def add_route_row(
 
     opened_at = route.opened_at.strftime("%d/%m/%Y")
 
-    yellow_cell_style = route_cell_styles["yellow"].get(
+    warning_cell_style = route_cell_styles["warning"].get(
         normalized_grade,
-        route_cell_styles["yellow"]["fallback"],
+        route_cell_styles["warning"]["fallback"],
     )
 
-    centered_yellow_cell_style = route_cell_styles[
-        "centered_yellow"
+    centered_warning_cell_style = route_cell_styles[
+        "centered_warning"
     ].get(
         normalized_grade,
-        route_cell_styles["centered_yellow"]["fallback"],
+        route_cell_styles["centered_warning"]["fallback"],
     )
 
-    if is_red:
+    if is_critical:
+        name_style = critical_cell_style
+        symbol_style = centered_critical_cell_style
+    elif is_warning:
         name_style = warning_cell_style
         symbol_style = centered_warning_cell_style
-    elif is_yellow:
-        name_style = yellow_cell_style
-        symbol_style = centered_yellow_cell_style
     else:
         name_style = normal_cell_style
         symbol_style = centered_cell_style

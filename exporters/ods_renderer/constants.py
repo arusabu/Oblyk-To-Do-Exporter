@@ -32,6 +32,24 @@ HOLD_COLOR_ORDER = {
     "#1a1a1a": 6,   # noir
 }
 
+DISMANTLING_COLORS = {
+   "warning" : "#FFA500", 
+   "critical" : "#b00020",
+}
+
+DISMANTLING_WARNING_THRESHOLD = 0.70
+DISMANTLING_CRITICAL_THRESHOLD = 0.85
+
+ROUTE_STYLE_TYPES = (
+    "normal",
+    "centered",
+    "warning",
+    "centered_warning",
+    "critical",
+    "centered_critical",
+    "grade",
+)
+
 HEADERS = (
     "",
     "Secteur",

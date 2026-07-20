@@ -15,6 +15,8 @@ from .colors import (
 
 from .constants import (
     GRADE_COLORS,
+    DISMANTLING_COLORS,
+    ROUTE_STYLE_TYPES,
 )
 
 from todo.models import Route
@@ -219,7 +221,7 @@ def create_styles(
     warning_text.addElement(
         TextProperties(
             fontsize="9pt",
-            color="#b00020",
+            color=DISMANTLING_COLORS["critical"],
             fontweight="bold",
         )
     )
@@ -238,7 +240,7 @@ def create_styles(
     centered_warning_text.addElement(
         TextProperties(
             fontsize="9pt",
-            color="#b00020",
+            color=DISMANTLING_COLORS["critical"],
             fontweight="bold",
         )
     )
@@ -288,231 +290,158 @@ def create_styles(
 
     return styles
 
+def build_route_cell_style(
+    *,
+    name: str,
+    background_color: str,
+    centered: bool = False,
+    text_color: str | None = None,
+    bold: bool = False,
+    left_padding: bool = False,
+) -> Style:
+    style = Style(
+        name=name,
+        family="table-cell",
+    )
+
+    properties = {
+        "backgroundcolor": background_color,
+        "padding": "0.10cm",
+        "border": "0.02cm solid #cccccc",
+        "verticalalign": "middle",
+    }
+
+    if left_padding:
+        properties["paddingleft"] = "0.50cm"
+
+    style.addElement(
+        TableCellProperties(**properties)
+    )
+
+    if centered:
+        style.addElement(
+            ParagraphProperties(
+                textalign="center",
+            )
+        )
+
+    if text_color is not None:
+        kwargs = {
+            "color": text_color,
+        }
+
+        if bold:
+            kwargs["fontweight"] = "bold"
+
+        style.addElement(
+            TextProperties(**kwargs)
+        )
+
+    return style
+
 def create_route_cell_styles(
     document: Any,
 ) -> dict[str, dict[str, Any]]:
     styles: dict[str, dict[str, Any]] = {
-        "normal": {},
-        "warning": {},
-        "yellow": {},
-        "centered": {},
-        "centered_warning": {},
-        "centered_yellow": {},
-        "grade": {},
+        style_type: {}
+        for style_type in ROUTE_STYLE_TYPES
     }
 
     for grade in GRADE_COLORS:
         background_color = grade_background(grade)
 
-        normal_style = Style(
+        normal_style = build_route_cell_style(
             name=f"RouteCell_{grade}",
-            family="table-cell",
-        )
-        normal_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
+            background_color=background_color,
         )
         document.automaticstyles.addElement(normal_style)
         styles["normal"][grade] = normal_style
 
-        warning_style = Style(
-            name=f"RouteCellWarning_{grade}",
-            family="table-cell",
-        )
-        warning_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
-        )
-        warning_style.addElement(
-            TextProperties(
-                color="#b00020",
-                fontweight="bold",
-            )
-        )
-        document.automaticstyles.addElement(warning_style)
-        styles["warning"][grade] = warning_style
-
-        yellow_style = Style(
-            name=f"RouteCellYellow_{grade}",
-            family="table-cell",
-        )
-        yellow_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
-        )
-        yellow_style.addElement(
-            TextProperties(
-                color="#FFA500",
-                fontweight="bold",
-            )
-        )
-        document.automaticstyles.addElement(yellow_style)
-        styles["yellow"][grade] = yellow_style
-
-
-        centered_style = Style(
+        centered_style = build_route_cell_style(
             name=f"CenteredRouteCell_{grade}",
-            family="table-cell",
-        )
-        centered_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
-        )
-        centered_style.addElement(
-            ParagraphProperties(
-                textalign="center",
-            )
+            background_color=background_color,
+            centered=True,
         )
         document.automaticstyles.addElement(centered_style)
         styles["centered"][grade] = centered_style
 
-        centered_warning_style = Style(
+        warning_style = build_route_cell_style(
+            name=f"RouteCellWarning_{grade}",
+            background_color=background_color,
+            text_color=DISMANTLING_COLORS["warning"],
+            bold=True,
+        )
+        document.automaticstyles.addElement(warning_style)
+        styles["warning"][grade] = warning_style
+
+        centered_warning_style = build_route_cell_style(
             name=f"CenteredRouteCellWarning_{grade}",
-            family="table-cell",
-        )
-        centered_warning_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
-        )
-        centered_warning_style.addElement(
-            ParagraphProperties(
-                textalign="center",
-            )
-        )
-        centered_warning_style.addElement(
-            TextProperties(
-                color="#b00020",
-                fontweight="bold",
-            )
+            background_color=background_color,
+            centered=True,
+            text_color=DISMANTLING_COLORS["warning"],
+            bold=True,
         )
         document.automaticstyles.addElement(centered_warning_style)
         styles["centered_warning"][grade] = centered_warning_style
 
-        centered_yellow_style = Style(
-            name=f"CenteredRouteCellYellow_{grade}",
-            family="table-cell",
+        critical_style = build_route_cell_style(
+            name=f"RouteCellCritical_{grade}",
+            background_color=background_color,
+            text_color=DISMANTLING_COLORS["critical"],
+            bold=True,
         )
-        centered_yellow_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
-        )
-        centered_yellow_style.addElement(
-            ParagraphProperties(
-                textalign="center",
-            )
-        )
-        centered_yellow_style.addElement(
-            TextProperties(
-                color="#FFA500",
-                fontweight="bold",
-            )
-        )
-        document.automaticstyles.addElement(centered_yellow_style)
-        styles["centered_yellow"][grade] = centered_yellow_style
+        document.automaticstyles.addElement(critical_style)
+        styles["critical"][grade] = critical_style
 
-        grade_style = Style(
-            name=f"GradeRouteCell_{grade}",
-            family="table-cell",
+        centered_critical_style = build_route_cell_style(
+            name=f"CenteredRouteCellCritical_{grade}",
+            background_color=background_color,
+            centered=True,
+            text_color=DISMANTLING_COLORS["critical"],
+            bold=True,
         )
-        grade_style.addElement(
-            TableCellProperties(
-                backgroundcolor=background_color,
-                padding="0.10cm",
-                paddingleft="0.50cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
+        document.automaticstyles.addElement(centered_critical_style)
+        styles["centered_critical"][grade] = centered_critical_style
+
+        grade_style = build_route_cell_style(
+            name=f"GradeRouteCell_{grade}",
+            background_color=background_color,
+            left_padding=True,
         )
         document.automaticstyles.addElement(grade_style)
         styles["grade"][grade] = grade_style
 
-    for style_kind in (
-        "normal",
-        "warning",
-        "yellow",
-        "centered",
-        "centered_warning",
-        "centered_yellow",
-        "grade",
-    ):
-        fallback_style = Style(
-            name=f"{style_kind.title()}RouteCell_fallback",
-            family="table-cell",
-        )
-        fallback_style.addElement(
-            TableCellProperties(
-                backgroundcolor="#ffffff",
-                padding="0.10cm",
-                border="0.02cm solid #cccccc",
-                verticalalign="middle",
-            )
-        )
 
-        if style_kind in (
-            "centered",
-            "centered_warning",
-            "centered_yellow",
+    for style_type in ROUTE_STYLE_TYPES:
+
+        text_color = None
+
+        if style_type in (
+            "critical",
+            "centered_critical",
         ):
-            fallback_style.addElement(
-                ParagraphProperties(
-                    textalign="center",
-                )
-            )
+            text_color = DISMANTLING_COLORS["critical"]
 
-        if style_kind == "grade":
-            fallback_style.addElement(
-                TableCellProperties(
-                    paddingleft="0.50cm",
-                )
-            )
-        
-        if style_kind in (
+        elif style_type in (
             "warning",
             "centered_warning",
         ):
-            fallback_style.addElement(
-                TextProperties(
-                    color="#b00020",
-                    fontweight="bold",
-                )
-            )
-        elif style_kind in (
-            "yellow",
-            "centered_yellow",
-        ):
-            fallback_style.addElement(
-                TextProperties(
-                    color="#FFA500",
-                    fontweight="bold",
-                )
-            )
+            text_color = DISMANTLING_COLORS["warning"]
 
-        document.automaticstyles.addElement(fallback_style)
-        styles[style_kind]["fallback"] = fallback_style
+        fallback_style = build_route_cell_style(
+            name=f"{style_type.title()}RouteCell_fallback",
+            background_color="#ffffff",
+            centered=style_type.startswith("centered"),
+            text_color=text_color,
+            bold=True,
+            left_padding=(style_type == "grade"),
+        )
+
+        document.automaticstyles.addElement(
+            fallback_style
+        )
+
+        styles[style_type]["fallback"] = fallback_style
 
     return styles
 

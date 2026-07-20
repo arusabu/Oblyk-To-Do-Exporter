@@ -1,6 +1,5 @@
 from collections import defaultdict
 from collections.abc import Iterable
-
 from todo.models import Ascent, Route, RouteHistory
 
 

@@ -2,22 +2,56 @@ from typing import Any
 
 import requests
 
+
 class OblykClient:
     BASE_URL = "https://api.oblyk.org/api/v1"
 
-    def __init__(
-        self,
-        api_access_token: str,
-        bearer_token: str,
-    ) -> None:
+    HTTP_API_ACCESS_TOKEN = (
+        "M4rvBxc4M7kqqdtXPDvFEYm9"
+    )
+
+    def __init__(self) -> None:
         self.session = requests.Session()
+
         self.session.headers.update(
             {
                 "Accept": "application/json",
-                "HttpApiAccessToken": api_access_token,
-                "Authorization": f"Bearer {bearer_token}",
+                "HttpApiAccessToken": (
+                    self.HTTP_API_ACCESS_TOKEN
+                ),
             }
         )
+
+
+    def login(
+        self,
+        email: str,
+        password: str,
+    ) -> None:
+        response = self.session.post(
+            f"{self.BASE_URL}/sessions/sign_in",
+            json={
+                "email": email,
+                "password": password,
+                "oblyk_full_name": None,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+
+        payload = response.json()
+
+        token = payload.get("token")
+
+        if token is None:
+            raise RuntimeError(
+                "Login succeeded but no bearer token was returned."
+            )
+
+        self.session.headers["Authorization"] = (
+            f"Bearer {token}"
+        )
+
 
     def get_current_user(self) -> dict:
         response = self.session.get(
@@ -26,7 +60,8 @@ class OblykClient:
         response.raise_for_status()
 
         return response.json()
-    
+
+
     def get_gym_spaces(
         self,
         gym_id: int,
@@ -42,7 +77,8 @@ class OblykClient:
         payload = response.json()
 
         return payload["ungrouped_spaces"]
-    
+
+
     def get_current_gym_routes(
         self,
         gym_id: int,
@@ -74,7 +110,8 @@ class OblykClient:
             page += 1
 
         return routes
-    
+
+
     def get_climbing_sessions(
         self,
     ) -> list[dict[str, Any]]:
@@ -106,6 +143,7 @@ class OblykClient:
 
         return sessions
 
+
     def get_climbing_session(
         self,
         session_date: str,
@@ -122,7 +160,8 @@ class OblykClient:
         response.raise_for_status()
 
         return response.json()
-    
+
+
 def build_space_order(
     spaces: list[dict[str, Any]],
 ) -> dict[str, int]:
