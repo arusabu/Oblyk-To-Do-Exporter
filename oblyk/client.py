@@ -66,7 +66,6 @@ class OblykClient:
         self,
         gym_id: int,
     ) -> list[dict[str, Any]]:
-        print(f"[INFO] Fetching gym {gym_id} spaces...")
 
         response = self.session.get(
             f"{self.BASE_URL}/gyms/{gym_id}/gym_spaces/groups.json",
@@ -75,6 +74,9 @@ class OblykClient:
         response.raise_for_status()
 
         payload = response.json()
+
+        for space in payload["ungrouped_spaces"]:
+            space["name"] = (space.get("name") or "")
 
         return payload["ungrouped_spaces"]
 
@@ -87,7 +89,6 @@ class OblykClient:
         page = 1
 
         while True:
-            print(f"[INFO] Fetching gym routes page {page}...")
 
             response = self.session.get(
                 f"{self.BASE_URL}/gyms/{gym_id}/gym_routes/paginated.json",
@@ -119,7 +120,6 @@ class OblykClient:
         page = 1
 
         while True:
-            print(f"[INFO] Fetching climbing sessions page {page}...")
 
             response = self.session.get(
                 f"{self.BASE_URL}/current_users/climbing_sessions.json",
@@ -148,7 +148,6 @@ class OblykClient:
         self,
         session_date: str,
     ) -> dict[str, Any]:
-        print(f"[INFO] Fetching climbing session {session_date}...")
 
         response = self.session.get(
             (
@@ -166,6 +165,6 @@ def build_space_order(
     spaces: list[dict[str, Any]],
 ) -> dict[str, int]:
     return {
-        space["name"].strip(): index
+        space["name"]: index
         for index, space in enumerate(spaces)
     }

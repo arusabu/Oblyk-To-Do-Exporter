@@ -1,3 +1,4 @@
+import console
 import os
 from config import load_config
 from datetime import date
@@ -5,6 +6,7 @@ from dotenv import load_dotenv
 from exporters.ods import export_todo_ods
 from oblyk.client import build_space_order, OblykClient
 from pathlib import Path
+from time import perf_counter
 from todo.builder import (
     build_route_ascents,
     build_route_history,
@@ -14,9 +16,9 @@ from todo.builder import (
 from todo.grade import GradeScale, filter_routes
 from todo.models import Ascent, Route
 
-config = load_config()
+start = perf_counter()
 
-print(config)
+config = load_config()
 
 def get_required_env(name: str) -> str:
     value = os.getenv(name)
@@ -37,25 +39,65 @@ def main() -> None:
 
     client = OblykClient()
 
+    console.blank()
+    console.title("Oblyk To-Do Exporter 0.1.0")
+    console.blank()
+
+    console.info("Connexion à Oblyk...")
     client.login(
         email=email,
         password=password,
     )
+    console.success("Authentifié.")
 
     gym_id = config.gym.id
 
     current_user = client.get_current_user()
     user_name = current_user.get("full_name") or "?"
-    route_data = client.get_current_gym_routes(gym_id)
-    spaces = client.get_gym_spaces(gym_id)
-    space_order = build_space_order(spaces)
+    console.blank()
+    console.info(f"Salut {user_name} !")
+    console.blank()
 
+    console.info("Récupération des espaces...")
+    spaces = client.get_gym_spaces(gym_id)
+    console.success(f"{len(spaces)} espace(s) trouvé(s).")
+
+    console.blank()
+    console.info("Téléchargement des voies...")
+    route_data = client.get_current_gym_routes(gym_id)
+    
     routes = [
         Route.from_api(data)
         for data in route_data
         if data.get("climbing_type") == "sport_climbing"
         and not data.get("dismounted", False)
     ]
+
+    route_counts: dict[str, int] = {}
+
+    console.success(
+        f"{len(routes)} voie(s) sportive(s) disponible(s)."
+    )
+
+    console.blank()
+    console.info("Répartition par espace :")
+    space_order = build_space_order(spaces)
+
+    for route in routes:
+        route_counts[route.space] = (
+            route_counts.get(route.space, 0) + 1
+        )
+
+    label_width = (
+        max(len(space["name"]) for space in spaces) + 5
+    )
+
+    for space in spaces:
+        name = space["name"].strip()
+        count = route_counts.get(name, 0)
+        if count == 0:
+            continue
+        console.item(name, count, label_width)
 
     grade_scale = GradeScale(routes)
 
@@ -77,17 +119,6 @@ def main() -> None:
         for route in routes
     )
 
-    print()
-    print(
-        f"[INFO] {len(route_data)} current route(s) fetched, "
-        f"{len(routes)} sport climbing route(s) retained."
-    )
-    print(
-        f"[INFO] Oldest current route opened on "
-        f"{oldest_route_date.isoformat()}."
-    )
-    print()
-
     session_data = client.get_climbing_sessions()
 
     gym_sessions = [
@@ -97,24 +128,11 @@ def main() -> None:
         and date.fromisoformat(session["session_date"]) >= oldest_route_date
     ]
 
-    print()
-    print(
-        f"[INFO] {len(session_data)} climbing session(s) fetched, "
-        f"{len(gym_sessions)} relevant session(s) retained "
-        f"for gym {gym_id}."
-    )
-    print()
-
     ascents: list[Ascent] = []
 
     for index, session in enumerate(gym_sessions, start=1):
         session_date_raw = session["session_date"]
         session_date = date.fromisoformat(session_date_raw)
-
-        print(
-            f"[INFO] Fetching session details "
-            f"[{index}/{len(gym_sessions)}]..."
-        )
 
         detail = client.get_climbing_session(session_date_raw)
 
@@ -171,67 +189,6 @@ def main() -> None:
         if needs_lead(route, history):
             lead_todo.append(route)
 
-    print()
-    print("========================")
-    print("Top-rope to-do")
-    print("========================")
-    print()
-
-    for route in top_rope_todo:
-        history = build_route_history(
-            route_ascents.get(route.id, [])
-        )
-
-        status = "PROJECT" if history.worked else "UNTRIED"
-
-        print(
-            f"{route.space} | "
-            f"{route.display_sector} | "
-            f"{route.grade} | "
-            f"{status} | "
-            f"{route.name}"
-        )
-
-    print()
-    print(
-        f"[INFO] {len(top_rope_todo)} route(s) "
-        f"in top-rope to-do."
-    )
-
-    print()
-    print("========================")
-    print("Lead to-do")
-    print("========================")
-    print()
-
-    for route in lead_todo:
-        history = build_route_history(
-            route_ascents.get(route.id, [])
-        )
-
-        if history.has_top_rope:
-            status = "TOP ROPE DONE"
-        elif history.has_unknown_roping:
-            status = "COMPLETED - ROPING UNKNOWN"
-        elif history.worked:
-            status = "PROJECT"
-        else:
-            status = "UNTRIED"
-
-        print(
-            f"{route.space} | "
-            f"{route.display_sector} | "
-            f"{route.grade} | "
-            f"{status} | "
-            f"{route.name}"
-        )
-
-    print()
-    print(
-        f"[INFO] {len(lead_todo)} route(s) "
-        f"in lead to-do."
-    )
-
     generated_at = date.today()
     output_path = Path("output") / "oblyk-todo.ods"
 
@@ -250,10 +207,13 @@ def main() -> None:
         space_order=space_order,
     )
 
-    print()
-    print(
-        f"[INFO] ODS exported to {output_path}."
-    )
+    console.blank()
+    console.success("Document créé :")
+    console.info(f"  {output_path}")
+    console.blank()
+    elapsed = perf_counter() - start
+    console.info(f"Terminé en {elapsed:.1f} s.")
+    console.blank()
 
 if __name__ == "__main__":
     main()
