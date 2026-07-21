@@ -150,6 +150,7 @@ This change only affects your current Windows user account.
 
 Check that:
 
+- `.env` exists;
 - your email address is correct;
 - your password is correct;
 - your Internet connection is working;
@@ -161,14 +162,15 @@ Check that:
 
 - `config.toml` exists;
 - `gym.id` is correct;
-- your selected grade ranges actually exist in your gym.
+- your selected grade ranges actually exist in your gym ;
+- your `config.toml` file is correctly filled in.
 
 ### Some expected routes are missing
 
 Check that:
 
-- the correct Oblyk gym has been selected;
-- the configured grade ranges match the grades available in your gym.
+* the correct gym is specified (correct `gym.id` in `config.toml`);
+* the grades entered in `config.toml` are the correct ones and do indeed exist in the hall.
 
 ### Need help?
 

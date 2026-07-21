@@ -127,6 +127,7 @@ Cette modification n'affecte que ton compte utilisateur.
 
 Vérifie que :
 
+* `.env` existe ;
 * ton adresse email est correcte ;
 * ton mot de passe est correct ;
 * ta connexion Internet fonctionne ;
@@ -138,14 +139,15 @@ Vérifie que :
 
 * `config.toml` existe ;
 * `gym.id` est correct ;
-* les plages de cotation sont compatibles avec les grades présents dans la salle.
+* les plages de cotation sont compatibles avec les grades présents dans la salle ;
+* les informations du fichier `config.toml` sont bien enregistrées.
 
 ### Les voies attendues n’apparaissent pas
 
 Vérifie que :
 
-* la salle Oblyk est la bonne ;
-* les grades saisis dans `config.toml` existent bien dans la salle.
+* la bonne salle est désignée (bon `gym.id` dans `config.toml`) ;
+* les grades saisis dans `config.toml` sont ceux désirés et existent bien dans la salle.
 
 ### Besoin d'aide ?
 
