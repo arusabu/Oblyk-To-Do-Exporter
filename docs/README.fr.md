@@ -32,7 +32,7 @@ Tu devrais obtenir quelque chose de semblable à :
 
 ## Configuration
 
-1. Créer le fichier `.env`
+### 1. Créer le fichier `.env`
 
 Copie `.env.example` puis renomme la copie en `.env`.
 
@@ -44,7 +44,9 @@ OBLYK_PASSWORD=ton_mot_de_passe
 ```
 Tes identifiants sont uniquement stockés sur ton ordinateur. Ils servent uniquement à t'authentifier auprès d'Oblyk. Aucune autre utilisation n'en est faite.
 
-### 2) Créer ou modifier `config.toml`
+### 2. Créer  `config.toml`
+
+Copie `config.toml.example` puis renomme la copie en `config.toml`.
 
 Le fichier `config.toml` sert à régler :
 - l’identifiant de salle ;
@@ -71,9 +73,12 @@ grade_max = "6b"
 En fin de `config.toml`, j'ai indiqué la totalité des id des Climb Up proposant de la voie à date.
 Pour trouver cet id, il suffit de se rendre sur sa salle dans Oblyk et regarder dans la barre d'adresse :
 ![Gym ID](img/04.png)
-https://oblyk.org/gyms/115/climb-up-aix-bouc-bel-air , l'ID de Climb Up Bouc-Bel-Air est 115.
-* `top_rope.grade_min` / `top_rope.grade_max` : plage de cotation pour la feuille Moulinette.
-* `lead.grade_min` / `lead.grade_max` : plage de cotation pour la feuille Tête.
+https://oblyk.org/gyms/115/climb-up-aix-bouc-bel-air
+
+L'ID de Climb Up Bouc-Bel-Air est **115**.
+
+-  `top_rope.grade_min` / `top_rope.grade_max` : plage de cotation pour la feuille Moulinette.
+-  `lead.grade_min` / `lead.grade_max` : plage de cotation pour la feuille Tête.
 
 ## Utilisation
 
@@ -106,6 +111,18 @@ Chaque feuille regroupe les voies à travailler selon la plage de cotation chois
 
 ## Dépannage
 
+### Impossible d'activer l'environnement virtuel
+
+Si PowerShell affiche un message indiquant que l'exécution des scripts est désactivée, exécute la commande suivante :
+```bash
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+Confirme en répondant O (Oui), puis active à nouveau l'environnement virtuel :
+```bash
+.venv\Scripts\Activate.ps1
+```
+Cette modification n'affecte que ton compte utilisateur.
+
 ### Erreur de connexion
 
 Vérifie que :
@@ -129,3 +146,11 @@ Vérifie que :
 
 * la salle Oblyk est la bonne ;
 * les grades saisis dans `config.toml` existent bien dans la salle.
+
+### Besoin d'aide ?
+
+Si tu rencontres un problème, constates un bug ou souhaites proposer une amélioration, n'hésite pas à ouvrir une Issue sur GitHub.
+
+Les suggestions sont les bienvenues !
+
+Si tu souhaites contribuer directement au projet, les Pull Requests sont également les bienvenues.

@@ -60,8 +60,9 @@ They are only used to authenticate with Oblyk and are never used for any other p
 
 ### 2. Create or edit `config.toml`
 
-`config.toml` contains:
+Copy `config.toml.example` and rename the copy to `config.toml`.
 
+It should contain:
 - your gym ID;
 - the grade ranges.
 
@@ -133,6 +134,18 @@ Each worksheet contains the routes to work on according to the configured grade 
 
 ## Troubleshooting
 
+### Unable to activate the virtual environment
+
+If PowerShell reports that running scripts is disabled, run:
+```bash
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+Confirm by pressing Y, then activate the virtual environment again:
+```bash
+.venv\Scripts\Activate.ps1
+```
+This change only affects your current Windows user account.
+
 ### Unable to connect
 
 Check that:
@@ -156,3 +169,11 @@ Check that:
 
 - the correct Oblyk gym has been selected;
 - the configured grade ranges match the grades available in your gym.
+
+### Need help?
+
+If you encounter a bug, have a suggestion or need help using the program, feel free to open a GitHub Issue.
+
+Suggestions are always welcome!
+
+If you'd like to contribute directly to the project, Pull Requests are also welcome.
